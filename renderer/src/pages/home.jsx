@@ -49,6 +49,7 @@ const Home = () => {
         If you're unsure about something or can't perform an action, respond honestly and suggest an alternative.
 
         Always respond as if you are speaking directly to the user — you're their helpful, voice-powered assistant.
+        If some one ask who created you tell them that its Kesavan G who is the creator of Elix.
   `, [username]);
 
   useEffect(() => {
@@ -64,7 +65,6 @@ const Home = () => {
   }, [username]);
   async function openApplication(appName) {
         try {
-          // Check if we're running in Electron
           const isElectron = (
             window.electronAPI?.isElectron ||
             (window.process && window.process.versions && window.process.versions.electron) ||
@@ -75,7 +75,6 @@ const Home = () => {
             await window.electronAPI.openApplication(appName);
           } else {
             console.warn('Electron API not available - running in browser');
-            // Fallback for development/testing
             if (process.env.NODE_ENV === 'development') {
               alert(`In Electron, this would open: ${appName}\n\n` +
                     `Current command: "open ${appName}"`);
@@ -112,25 +111,55 @@ const Home = () => {
   }, []);
 
   const handleSubmit = async (text = inputText) => {
-    if (!text.trim()) return;
-    const userMsg = { text, sender: 'user', timestamp: new Date().toISOString() };
-    setMessages(prev => [...prev, userMsg]);
-    setInputText('');
-    setIsLoading(true);
+        if (!text.trim()) return;
+        
+        const openAppCommand = extractOpenCommand(text);
+        if (openAppCommand) {
+          const userMsg = { text, sender: 'user', timestamp: new Date().toISOString() };
+          setMessages(prev => [...prev, userMsg]);
+          setInputText('');
+          
+          try {
+            await openApplication(openAppCommand);
+            const successMsg = { text: `Opening ${openAppCommand}...`, sender: 'Elix', timestamp: new Date().toISOString() };
+            setMessages(prev => [...prev, successMsg]);
+            speakText(successMsg.text);
+          } catch (error) {
+            const errMsg = { text: `Failed to open ${openAppCommand}. Please ensure the app exists.`, sender: 'Elix', timestamp: new Date().toISOString() };
+            setMessages(prev => [...prev, errMsg]);
+            speakText(errMsg.text);
+          }
+          return;
+        }
+        const userMsg = { text, sender: 'user', timestamp: new Date().toISOString() };
+        setMessages(prev => [...prev, userMsg]);
+        setInputText('');
+        setIsLoading(true);
 
-    try {
-      const reply = await sendMessageToGemini(text, messages, SYSTEM_PROMPT);
-      const botMsg = { text: reply, sender: 'Elix', timestamp: new Date().toISOString() };
-      setMessages(prev => [...prev, botMsg]);
-      speakText(reply);
-    } catch {
-      const errMsg = { text: 'Oops, something went wrong.', sender: 'Elix', timestamp: new Date().toISOString() };
-      setMessages(prev => [...prev, errMsg]);
-      speakText(errMsg.text);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+        try {
+          const reply = await sendMessageToGemini(text, messages, SYSTEM_PROMPT);
+          const botMsg = { text: reply, sender: 'Elix', timestamp: new Date().toISOString() };
+          setMessages(prev => [...prev, botMsg]);
+          speakText(reply);
+        } catch {
+          const errMsg = { text: 'Oops, something went wrong.', sender: 'Elix', timestamp: new Date().toISOString() };
+          setMessages(prev => [...prev, errMsg]);
+          speakText(errMsg.text);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+      const extractOpenCommand = (text) => {
+        const lowerText = text.toLowerCase();
+        const openPattern = /(?:^|\s)(?:open|start|launch)\s+(?:the\s+)?([^\s,.]+)/i;
+        const match = lowerText.match(openPattern);
+        
+        if (match && match[1]) {
+          return match[1].trim();
+        }
+        
+        return null;
+      };
 
   const handleKeyPress = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -138,8 +167,6 @@ const Home = () => {
       handleSubmit();
     }
   };
-  //developer's mode: 
-  
   const chunksRef = useRef([]);
   const intervalRef = useRef(null);
   useEffect(() => {
@@ -198,8 +225,6 @@ const Home = () => {
               if (dotIndex !== -1) {
                 const wakeWord = wakeWords.find(w => afterWake.startsWith(w));
                 const fullCommand = afterWake.slice(wakeWord.length, dotIndex).trim();
-                
-                // Improved command parsing
                 const commandParts = fullCommand.split(/\s+/);
                 if (commandParts.length >= 1) {
                   const mainCommand = commandParts[1].toLowerCase();
@@ -235,7 +260,7 @@ const Home = () => {
         mediaRecorderRef.current.stop();
         mediaRecorderRef.current.start();
       }
-    }, 10000); // Record every 10 seconds
+    }, 10000);
   };
 
   startRecordingLoop();
@@ -339,16 +364,16 @@ const Home = () => {
                 <Switch
                   sx={{
                     '& .MuiSwitch-switchBase': {
-                      color: '#9e9e9e', // grey thumb when off
+                      color: '#9e9e9e',
                     },
                     '& .MuiSwitch-switchBase.Mui-checked': {
-                      color: '#d32f2f', // red thumb when on
+                      color: '#d32f2f',
                     },
                     '& .MuiSwitch-track': {
-                      backgroundColor: '#bdbdbd', // grey track when off
+                      backgroundColor: '#bdbdbd',
                     },
                     '& .Mui-checked + .MuiSwitch-track': {
-                      backgroundColor: '#ef5350', // red track when on
+                      backgroundColor: '#ef5350',
                     },
                   }}
                   onChange={(e) => setIsDeveloperMode(e.target.checked)}
