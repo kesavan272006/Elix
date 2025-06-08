@@ -8,6 +8,8 @@ import { useNavigate } from 'react-router-dom';
 import Switch from '@mui/material/Switch';
 import FormGroup from '@mui/material/FormGroup';
 import FormControlLabel from '@mui/material/FormControlLabel';
+import { signOut } from 'firebase/auth';
+import logo from '../assets/Elix-logo.png'
 const Home = () => {
   const [username, setUsername] = useState('');
   const [messages, setMessages] = useState([]);
@@ -169,6 +171,14 @@ const Home = () => {
   };
   const chunksRef = useRef([]);
   const intervalRef = useRef(null);
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      navigate("/");
+    } catch (error) {
+      console.error("Error signing out:", error);
+    }
+  };
   useEffect(() => {
   if (!isDeveloperMode) return;
   const startRecordingLoop = async () => {
@@ -356,7 +366,7 @@ const Home = () => {
   return (
     <div className="home-container">
       <div className="chat-header">
-        <img src="/circlelogo.png" alt="Elix" />
+        <img src={logo} alt="Elix" />
         <h1>Elix - Executive Learning Interface eXpert</h1>
         <FormGroup>
             <FormControlLabel
@@ -384,6 +394,7 @@ const Home = () => {
           </FormGroup>
 
         <span>{isRecording ? '🎙️ Listening...' : 'AI Assistant'}</span>
+        <button onClick={handleLogout}>Logout</button>
       </div>
 
       <div className="chat-body">
