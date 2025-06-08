@@ -20,7 +20,7 @@ const Home = () => {
   const audioChunksRef = useRef([]);
   const messagesEndRef = useRef(null);
   const speechSynthesisRef = useRef(window.speechSynthesis);
-
+  
   const ASSEMBLY_API_KEY = 'fb0efc8b13234005bf664012ec39542c';
   const [isDeveloperMode, setIsDeveloperMode] = useState(false);
   useEffect(() => {
@@ -62,6 +62,30 @@ const Home = () => {
       speakText(welcomeMsg.text);
     }
   }, [username]);
+  async function openApplication(appName) {
+        try {
+          // Check if we're running in Electron
+          const isElectron = (
+            window.electronAPI?.isElectron ||
+            (window.process && window.process.versions && window.process.versions.electron) ||
+            navigator.userAgent.toLowerCase().includes(' electron/')
+          );
+
+          if (isElectron && window.electronAPI?.openApplication) {
+            await window.electronAPI.openApplication(appName);
+          } else {
+            console.warn('Electron API not available - running in browser');
+            // Fallback for development/testing
+            if (process.env.NODE_ENV === 'development') {
+              alert(`In Electron, this would open: ${appName}\n\n` +
+                    `Current command: "open ${appName}"`);
+            }
+          }
+        } catch (error) {
+          console.error('Failed to open application:', error);
+          alert(`Failed to open ${appName}. Please ensure the application is installed.`);
+        }
+      }
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -166,22 +190,34 @@ const Home = () => {
               const i = transcript.indexOf(word);
               return (i !== -1 && (idx === -1 || i < idx)) ? i : idx;
             }, -1);
-
+            
             if (wakeIndex !== -1) {
               const afterWake = transcript.slice(wakeIndex);
               const dotIndex = afterWake.indexOf('dot');
 
               if (dotIndex !== -1) {
                 const wakeWord = wakeWords.find(w => afterWake.startsWith(w));
-                const command = afterWake.slice(wakeWord.length, dotIndex).trim();
+                const fullCommand = afterWake.slice(wakeWord.length, dotIndex).trim();
+                
+                // Improved command parsing
+                const commandParts = fullCommand.split(/\s+/);
+                if (commandParts.length >= 1) {
+                  const mainCommand = commandParts[1].toLowerCase();
+                  const args = commandParts.slice(1).join(' ');
 
-                if (command.length > 0) {
-                  setInputText(command);
-                  handleSubmit(command); 
+                  if (mainCommand === 'open' && args) {
+                    console.log(`Attempting to open: ${args}`);
+                    setInputText(fullCommand);
+                    handleSubmit(fullCommand);
+                    await openApplication(args);
+                  }
+                  else if (fullCommand.length > 0) {
+                    setInputText(fullCommand);
+                    handleSubmit(fullCommand);
+                  }
                 }
               }
             }
-
             found = true;
           }
 
