@@ -63,7 +63,6 @@ body {
     position: relative;
     overflow: hidden;
     background: #000000;
-    padding-bottom: 100px; /* Add space for scroll indicator */
 }
 
 .hero-background {
@@ -476,7 +475,7 @@ body {
 /* Scroll Down Indicator */
 .scroll-down {
     position: absolute;
-    bottom: 20px;
+    bottom: 30px;
     left: 50%;
     transform: translateX(-50%);
     z-index: 100;
