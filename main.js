@@ -170,18 +170,26 @@ app.whenReady().then(() => {
       if (appPath.startsWith('http://') || appPath.startsWith('https://') || appPath.includes('://')) {
         console.log('Opening external URL');
         await shell.openExternal(appPath);
+        return { success: true, appName };
       } else {
         console.log('Opening path');
         const result = await shell.openPath(appPath);
         if (result) {
-          throw new Error(`Failed to open: ${result}`);
+          return { 
+            success: false, 
+            error: `Failed to open ${appName}. Error: ${result}`,
+            appName 
+          };
         }
+        return { success: true, appName };
       }
-      
-      return { success: true, appName };
     } catch (error) {
       console.error('Error in open-application handler:', error);
-      throw error;
+      return { 
+        success: false, 
+        error: error.message || 'An unexpected error occurred',
+        appName 
+      };
     }
   });
 

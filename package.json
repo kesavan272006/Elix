@@ -23,10 +23,12 @@
   "dependencies": {
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
+    "@mui/icons-material": "^7.1.1",
     "@mui/material": "^7.1.1",
     "@picovoice/porcupine-node": "^3.0.6",
     "@picovoice/pvrecorder-node": "^1.2.8",
     "firebase": "^11.9.0",
+    "framer-motion": "^12.16.0",
     "material": "^0.9.23",
     "react-router-dom": "^7.6.2",
     "ui": "^0.2.4"
