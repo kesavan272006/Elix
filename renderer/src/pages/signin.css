@@ -104,7 +104,6 @@
 .input-field::placeholder {
     color: rgba(255, 255, 255, 0.5);
 }
-
 .google-button {
     width: 100%;
     padding: 0.75rem;
@@ -178,8 +177,6 @@
         transform: scale(0.8);
     }
 }
-
-/* Responsive Design */
 @media (max-width: 640px) {
     .signin-form {
         padding: 2rem;

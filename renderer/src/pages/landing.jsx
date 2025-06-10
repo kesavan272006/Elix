@@ -25,7 +25,6 @@ const Landing = () => {
 
     return (
         <div className="landing-container">
-            {/* Hero Section */}
             <section className="hero-section">
                 <div className="hero-content">
                     <div className="logo-container">
@@ -50,8 +49,6 @@ const Landing = () => {
                     </p>
                 </div>
             </section>
-
-            {/* Features Section */}
             <section className="scroll-section features-section">
                 <h2 className="section-title">Powerful Features</h2>
                 <div className="features-grid">
@@ -72,8 +69,6 @@ const Landing = () => {
                     </div>
                 </div>
             </section>
-
-            {/* How to Use Section */}
             <section className="scroll-section tutorial-section">
                 <h2 className="section-title">How To Use ELIX</h2>
                 <div className="tutorial-steps">
@@ -119,8 +114,6 @@ const Landing = () => {
                     </div>
                 </div>
             </section>
-
-            {/* Final CTA */}
             <section className="scroll-section final-cta">
                 <h2>Ready to Boost Your Productivity?</h2>
                 <button 

@@ -115,15 +115,12 @@ const Home = () => {
                   if (dotIndex !== -1) {
                     const wakeWord = wakeWords.find(w => afterWake.startsWith(w));
                     const fullCommand = afterWake.slice(wakeWord.length, dotIndex).trim();
-                    
-                    // Check for reminder command
                     const reminderInfo = extractReminderInfo(fullCommand);
                     if (reminderInfo) {
                       await addReminder(reminderInfo);
                       setInputText(fullCommand);
                       handleSubmit(fullcommand);
                     } else {
-                      // Send all other commands to the chat
                       setInputText(fullCommand);
                       handleSubmit(fullCommand);
                     }
@@ -253,15 +250,11 @@ const Home = () => {
     setMessages(prev => [...prev, userMsg]);
     await addMessageToFirebase(userMsg);
     setInputText('');
-
-    // Check for reminder command
     const reminderInfo = extractReminderInfo(text);
     if (reminderInfo) {
       await addReminder(reminderInfo);
       return;
     }
-
-    // Check for open command
     const appToOpen = extractOpenCommand(text);
     if (appToOpen) {
       await openApplication(appToOpen);
@@ -501,13 +494,9 @@ const Home = () => {
       alert('Microphone access denied or unsupported.');
     }
   };
-
-  // Add reminder parsing functions
   const parseTimeString = (timeStr) => {
     const now = new Date();
     const lowerTimeStr = timeStr.toLowerCase().trim();
-    
-    // Handle relative time (e.g., "in 10 minutes", "in 2 hours")
     const relativeMatch = lowerTimeStr.match(/in\s+(\d+)\s+(minute|hour|min|hr)s?/i);
     if (relativeMatch) {
       const amount = parseInt(relativeMatch[1]);
@@ -520,13 +509,11 @@ const Home = () => {
       }
       return reminderTime;
     }
-
-    // Handle absolute time formats
     const timeFormats = [
-      /(\d{1,2})(?::(\d{2}))?\s*(am|pm)/i,  // 5pm, 5:30pm, 5:30 pm
-      /(\d{1,2})(?::(\d{2}))?/,            // 17:30, 17
-      /at\s+(\d{1,2})(?::(\d{2}))?\s*(am|pm)?/i,  // at 5pm, at 17:30
-      /(\d{1,2})(?::(\d{2}))?(am|pm)/i     // 5pm, 5:30pm (no space before am/pm)
+      /(\d{1,2})(?::(\d{2}))?\s*(am|pm)/i,
+      /(\d{1,2})(?::(\d{2}))?/,         
+      /at\s+(\d{1,2})(?::(\d{2}))?\s*(am|pm)?/i, 
+      /(\d{1,2})(?::(\d{2}))?(am|pm)/i   
     ];
 
     for (const format of timeFormats) {
@@ -536,15 +523,9 @@ const Home = () => {
         let hours = parseInt(match[1]);
         const minutes = match[2] ? parseInt(match[2]) : 0;
         const isPM = match[3]?.toLowerCase() === 'pm';
-
-        // Handle 12-hour format
         if (isPM && hours < 12) hours += 12;
         if (!isPM && hours === 12) hours = 0;
-
-        // Set the time in local timezone
         reminderTime.setHours(hours, minutes, 0, 0);
-        
-        // If the time has already passed today, set it for tomorrow
         if (reminderTime <= now) {
           reminderTime.setDate(reminderTime.getDate() + 1);
         }
@@ -564,8 +545,6 @@ const Home = () => {
     const reminderTime = parseTimeString(timeStr);
     
     if (!reminderTime) return null;
-
-    // Extract the reminder message (everything after the time)
     const messageMatch = timeStr.match(/(?:at|in|to|about)\s+(.+?)(?:\s+to\s+|\s+about\s+|\s+that\s+|\s+to\s+remember\s+|\s+to\s+do\s+)(.+)/i);
     const reminderMessage = messageMatch ? messageMatch[2].trim() : 'Reminder';
 
@@ -605,8 +584,6 @@ const Home = () => {
     await addMessageToFirebase(confirmationMsg);
     speakText(confirmationMsg.text);
   };
-
-  // Add reminder checking functionality
   useEffect(() => {
     const checkReminders = async () => {
       if (!auth.currentUser) return;
@@ -623,15 +600,12 @@ const Home = () => {
       snapshot.forEach(async (doc) => {
         const reminder = doc.data();
         const reminderTime = new Date(reminder.time);
-        
-        // Compare only hours and minutes using system time
         const nowHours = now.getHours();
         const nowMinutes = now.getMinutes();
         const reminderHours = reminderTime.getHours();
         const reminderMinutes = reminderTime.getMinutes();
         
         if (nowHours === reminderHours && nowMinutes === reminderMinutes) {
-          // Show notification
           if (window.electronAPI?.showNotification) {
             window.electronAPI.showNotification({
               title: 'Elix Reminder',
@@ -643,7 +617,6 @@ const Home = () => {
               originalText: reminder.originalText
             });
           } else {
-            // Fallback for browser
             if (Notification.permission === 'granted') {
               new Notification('Elix Reminder', {
                 body: `You asked me to remind you at ${reminderTime.toLocaleTimeString([], { 
@@ -655,16 +628,12 @@ const Home = () => {
               });
             }
           }
-
-          // Mark reminder as completed
           await updateDoc(doc.ref, { isCompleted: true });
         }
       });
     };
-
-    // Check reminders every minute
     reminderCheckInterval.current = setInterval(checkReminders, 60000);
-    checkReminders(); // Initial check
+    checkReminders(); 
 
     return () => {
       if (reminderCheckInterval.current) {

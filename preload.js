@@ -13,7 +13,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
     }
   },
   isElectron: true,
-  // Add debug info
   getPlatform: () => process.platform,
   getVersions: () => process.versions
 });
