@@ -76,7 +76,7 @@ const Landing = () => {
                         <div className="step-number">1</div>
                         <div className="step-content">
                             <h3>Activate Developer Mode</h3>
-                            <p>Say wake words <span className="code">"Elix"</span> or <span className="code">"Alex"</span> followed by your command and end with <span className="code">"dot"</span></p>
+                            <p>Say wake words <span className="code">"Elix"</span> followed by your command and end with <span className="code">"dot"</span></p>
                             <div className="prompt-example">
                                 <p>"Elix open calculator dot"</p>
                             </div>

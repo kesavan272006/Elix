@@ -25,6 +25,9 @@ const Home = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [currentChatId, setCurrentChatId] = useState(null);
   const [showScrollButton, setShowScrollButton] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const fileInputRef = useRef(null);
   const navigate = useNavigate();
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
@@ -226,8 +229,24 @@ const Home = () => {
     setIsSidebarOpen(false);
   };
 
+  const handleImageUpload = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const base64Data = e.target.result.split(',')[1];
+        setSelectedImage({
+          data: base64Data,
+          mimeType: file.type
+        });
+        setImagePreview(e.target.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleSubmit = async (text = inputText) => {
-    if (!text.trim() || !auth.currentUser) return;
+    if ((!text.trim() && !selectedImage) || !auth.currentUser) return;
     
     if (!currentChatId) {
       const chatsRef = collection(database, 'Users', auth.currentUser.uid, 'chats');
@@ -245,11 +264,21 @@ const Home = () => {
     const userMsg = { 
       text, 
       sender: 'user', 
-      timestamp: new Date().toISOString() 
+      timestamp: new Date().toISOString(),
+      image: selectedImage ? {
+        data: selectedImage.data,
+        mimeType: selectedImage.mimeType
+      } : null
     };
     setMessages(prev => [...prev, userMsg]);
     await addMessageToFirebase(userMsg);
     setInputText('');
+    setSelectedImage(null);
+    setImagePreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+
     const reminderInfo = extractReminderInfo(text);
     if (reminderInfo) {
       await addReminder(reminderInfo);
@@ -264,7 +293,7 @@ const Home = () => {
     setIsLoading(true);
 
     try {
-      const reply = await sendMessageToGemini(text, messages, SYSTEM_PROMPT);
+      const reply = await sendMessageToGemini(text, messages, SYSTEM_PROMPT, selectedImage);
       const botMsg = { 
         text: reply, 
         sender: 'Elix', 
@@ -696,7 +725,18 @@ const Home = () => {
       <div className="chat-body" ref={chatContainerRef}>
         {messages.map((msg, i) => (
           <div key={i} className={`msg ${msg.sender}`}>
-            <div className={`bubble ${msg.isTranscribing ? 'transcribing' : ''}`}>{msg.text}</div>
+            <div className={`bubble ${msg.isTranscribing ? 'transcribing' : ''}`}>
+              {msg.image && (
+                <div className="message-image">
+                  <img 
+                    src={`data:${msg.image.mimeType};base64,${msg.image.data}`} 
+                    alt="Uploaded content"
+                    style={{ maxWidth: '300px', maxHeight: '300px', borderRadius: '8px' }}
+                  />
+                </div>
+              )}
+              {msg.text}
+            </div>
             <span className="timestamp">
               {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </span>
@@ -734,6 +774,23 @@ const Home = () => {
       </div>
 
       <div className="chat-footer">
+        {imagePreview && (
+          <div className="image-preview">
+            <img src={imagePreview} alt="Preview" />
+            <button 
+              className="remove-image" 
+              onClick={() => {
+                setImagePreview(null);
+                setSelectedImage(null);
+                if (fileInputRef.current) {
+                  fileInputRef.current.value = '';
+                }
+              }}
+            >
+              ✕
+            </button>
+          </div>
+        )}
         <textarea
           rows={1}
           value={inputText}
@@ -741,10 +798,30 @@ const Home = () => {
           onKeyDown={handleKeyPress}
           placeholder="Type your message..."
         />
+        <input
+          type="file"
+          ref={fileInputRef}
+          onChange={handleImageUpload}
+          accept="image/*"
+          style={{ display: 'none' }}
+        />
+        <button 
+          onClick={() => fileInputRef.current?.click()} 
+          className="image-upload"
+          title="Upload Image"
+          style={{justifyContent:'center', alignItems:'center'}}
+        >
+          📷
+        </button>
         <button onClick={toggleVoiceInput} className={`mic ${isRecording ? 'on' : ''}`}>
           {isRecording ? '⏹️' : '🎤'}
         </button>
-        <button onClick={() => handleSubmit()} disabled={!inputText.trim() || isLoading}>➡️</button>
+        <button 
+          onClick={() => handleSubmit()} 
+          disabled={(!inputText.trim() && !selectedImage) || isLoading}
+        >
+          ➡️
+        </button>
       </div>
     </div>
   );

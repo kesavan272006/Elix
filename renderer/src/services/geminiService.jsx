@@ -1,6 +1,6 @@
 const GEMINI_API_KEY = "AIzaSyBXV-FGg8hpDOfp1VfiHKHFeWzBZkedk4g";
 const GEMINI_API_URL =
-  'https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent';
+  'https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent';
 
 if (!GEMINI_API_KEY) {
   console.error(
@@ -11,7 +11,8 @@ if (!GEMINI_API_KEY) {
 export const sendMessageToGemini = async (
   userMessage,
   conversationHistory = [],
-  systemPrompt = ''
+  systemPrompt = '',
+  imageData = null
 ) => {
   if (!GEMINI_API_KEY) {
     throw new Error('Gemini API key is not configured');
@@ -28,16 +29,36 @@ export const sendMessageToGemini = async (
     }
 
     conversationHistory.forEach((msg) => {
-      contents.push({
-        role: msg.sender === 'user' ? 'user' : 'assistant',
-        parts: [{ text: msg.text }],
-      });
+      if (msg.image) {
+        contents.push({
+          role: msg.sender === 'user' ? 'user' : 'assistant',
+          parts: [
+            { text: msg.text },
+            { inline_data: { mime_type: msg.image.mimeType, data: msg.image.data } }
+          ],
+        });
+      } else {
+        contents.push({
+          role: msg.sender === 'user' ? 'user' : 'assistant',
+          parts: [{ text: msg.text }],
+        });
+      }
     });
 
-    contents.push({
-      role: 'user',
-      parts: [{ text: userMessage }],
-    });
+    if (imageData) {
+      contents.push({
+        role: 'user',
+        parts: [
+          { text: userMessage },
+          { inline_data: { mime_type: imageData.mimeType, data: imageData.data } }
+        ],
+      });
+    } else {
+      contents.push({
+        role: 'user',
+        parts: [{ text: userMessage }],
+      });
+    }
 
     const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
       method: 'POST',
@@ -86,7 +107,10 @@ export const sendMessageToGemini = async (
     const data = await response.json();
     const rawResponse =
       data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    const cleanedResponse = rawResponse.replace(/\*{2,}/g, '');
+    const cleanedResponse = rawResponse
+      .replace(/\*{1,}/g, '')
+      .replace(/\n\s*\n/g, '\n')
+      .trim();
     return cleanedResponse;
   } catch (error) {
     console.error('Error in Gemini API call:', error);
