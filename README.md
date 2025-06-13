@@ -224,18 +224,35 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 - Advanced task automation
 - Plugin system
 - Cross-platform support 
-## 📸 Screenshots & Demo
 
+## 📸 Media Gallery
+
+### Screenshots
 <div align="center">
-  <img src="Images/elix1.png" width="300" alt="Main Interface">
-  <img src="Images/elix2.jpg" width="300" alt="Voice Command">
-  <img src="Images/elix3.png" width="300" alt="Settings Panel">
-  <img src="Images/elix4.png" width="300" alt="Reminder System">
+  <img src="Images/elix1.png" alt="Elix Interface" width="400"/>
+  <p><em>Main Interface</em></p>
   
-  <video width="300" controls>
+  <img src="Images/elix2.jpg" alt="Voice Control" width="400"/>
+  <p><em>Voice Control Interface</em></p>
+  
+  <img src="Images/elix3.jpg" alt="Image Analysis" width="400"/>
+  <p><em>Image Analysis Feature</em></p>
+  
+  <img src="Images/elix4.png" alt="Advanced Features" width="400"/>
+  <p><em>Advanced Features Showcase</em></p>
+</div>
+
+### Demo Videos
+<div align="center">
+  <video width="400" controls>
     <source src="Images/elix_vid1.mp4" type="video/mp4">
+    Your browser does not support the video tag.
   </video>
-  <video width="300" controls>
+  <p><em>Voice Command Demo</em></p>
+  
+  <video width="400" controls>
     <source src="Images/elix_vid2.mp4" type="video/mp4">
+    Your browser does not support the video tag.
   </video>
+  <p><em>Image Analysis Demo</em></p>
 </div>
